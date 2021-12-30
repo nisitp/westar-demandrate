@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title>Westar Energy Rates Interactive</title>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but westar_rates_interactive doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+
+<!--   VARIABLE NAME: DESCRIPTION                                                               TYPE                              RESTRICTIONS
+       * kwh: Default kWh for slider, changeable by user; Overwritten by kWhAnnual/12           int                               Must be within the bounds of kWhMin and kWhMax
+       * kwhMin: Minimum bound of kWh                                                           int                               Must be < kWhMax; Must be >= 0
+       * kwhMax: Maximum bound of kWh                                                           int                               Must be greater than kWhMin
+       * kwhRateS: kWh rate during the summer (Peak Efficiency Rate)                            float                             Must be >= 0
+       * kwhRateS900: kWh rate for first 900 kWh during summer (Standard Residential Rate)      float                             Must be >= 0
+       * kwhRateSadd: kWh rate for all additional kWh during summer (Standard Residential Rate) float                             Must be >= 0
+       * kwhRateW: kWh rate during the winter (Peak Efficiency Rate)                            float                             Must be >= 0
+       * kwhRateS900: kWh rate for first 900 kWh during winter (Standard Residential Rate)      float                             Must be >= 0
+       * kwhRateSadd: kWh rate for all additional kWh during winter (Standard Residential Rate) float                             Must be >= 0
+       * demand: Default peak demand for slider, changeable by user; Overwritten by demandAvg   int                               Must be within the bounds of demandMin and demandMax
+       * demandMin: Minimum bound of peak demand                                                int                               Must be < demandMax; Must be >= 0
+       * demandMax: Maximum bound of peak demand                                                int                               Must be > demandMin; Must be < 100
+       * demandRateS: Peak demand rate during the summer                                        float                             Must be >= 0
+       * demandRateW: Peak demand rate during the winter                                        float                             Must be >= 0
+       * serviceFee: Baseline service fee that is always added to the end calculation           float                             Must be >= 0
+       * limitedData: Whether data is limited                                                   bool                              Must be true or false
+       * riderCharge: Average rider charges                                                     float                             Must be >= 0
+       * kWhAnnual: Total annual kWh usage of customer, if available                            int                               Must be >= 0
+       * demandAvg: Average demand usage of customer over past year, if available               float                             Must be >= 0
+     -->
+    <script>window.westarRatesOptions = {
+        kwh: 2000,
+        kwhMin: 100,
+        kwhMax: 2500,
+        kwhRateS: 0.04584,
+        kwhRateS900: 0.073512,
+        kwhRateSadd: 0.081088,
+        kwhRateW: 0.04584,
+        kwhRateW900: 0.073512,
+        kwhRateWadd: 0.060089,
+        demand: 6,
+        demandMin: 1,
+        demandMax: 25,
+        demandRateS: 9,
+        demandRateW: 3,
+        serviceFee: 14.5,
+        limitedData: false,
+        riderCharge: 0.04074975,
+         };</script>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+</html>

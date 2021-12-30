@@ -1,0 +1,126 @@
+<div id="westar-demand-app">
+    <div class="stand-in" ref="top"></div>
+    <div class="instructions" style="text-align: center">Current use compared</div>
+    <table class="standard-rate">
+        <tr>
+            <th>&nbsp;</th>
+            <th>Standard Residential Rate</th>
+            <th>Peak Efficiency Rate</th>
+        </tr>
+        <tr>
+            <td class="standard-rate__title">Annual kWh<span v-if="limitedData">*</span></td>
+            <td>{{kWhAnnual | round | comma}}</td>
+            <td>{{kWhAnnual | round | comma}}</td>
+        </tr>
+        <tr>
+            <td class="standard-rate__title">Monthly Avg Peak Demand<span v-if="limitedData">*</span></td>
+            <td>{{demandAvg | round}}</td>
+            <td>{{demandAvg | round}}</td>
+        </tr>
+        <tr>
+            <td class="standard-rate__title">Projected Annual Cost</td>
+            <td>${{resProj | round | comma}}</td>
+            <td>${{effProj | round | comma}}</td>
+        </tr>
+        <tr>
+            <td class="standard-rate__description" colspan="3">The Efficiency Rate would cost you  <em style="font-weight: bold; font-style: normal;">${{projDiff | round | comma}}</em> {{projDesc}} per year based upon your previous 12 months' use and demand and today's rates. Customers who go on a rate plan with a demand change will typically see a 5% - 10% lower peak demand by managing their energy use more intentionally. If you managed your peak demand 10%, the Peak Efficiency Rate could cost up to <em style="font-weight: bold; font-style: normal;">${{potentialSavings | round | comma}}</em> less annually.</td>
+        </tr>
+    </table>
+    <div class="standard-rate__tax">Projected annual cost does not include Franchise Fees and State and Local Taxes.</div>
+    <div class="standard-rate__data" v-if="limitedData">Your house does not have 12 months of usage information, so we are using the average kWh and demand across all our residential customers.</div>
+    
+    <div class="app-inner" @mouseup="hideBubbles()" @touchend="hideBubbles()">
+        <div class="instructions" style="text-align: center">Move the sliders below to see how changes in your energy use could impact your bill.</div>
+        <div class="energy-use">
+            <h2 class="energy-use__title"><em style="font-size: 20px">Your monthly average</em><br>Energy Use: <em style="color: #224192; font-weight: bold; font-style: normal;">{{energyUse | round}}</em> kWh</h2>
+            <p class="energy-use__range-container">
+                <span class="energy-use__range-icon energy-use__range-icon--left fa fa-bolt"></span>
+                <input type="range" class="energy-use__range" min="0" max="1000" v-model.number="energyUseRange" ref="energyUseRange">
+                <span class="energy-use__range-bubble" :style="energyUseRangeBubble" :class="{'energy-use__range-bubble__active': energyBubble}">{{energyUse | round}}</span>
+                <span class="energy-use__range-icon energy-use__range-icon--right fa fa-bolt"></span>
+            </p>
+            <div class="container">
+                <a href="#" @click.prevent="resetEnergy()" class="reset" :class="{'reset__active': energyReset}">Reset</a>
+            </div>
+        </div>
+        <div class="rule"></div>
+        <div class="peak-demand" ref="peak-demand">
+            <h2 class="peak-demand__title">
+                <em style="font-size: 20px">Your monthly average</em> <br>Peak Demand: <em style="color: #224192; font-weight: bold; font-style: normal;">{{peakDemand | round}} </em>
+                <a class="peak-demand__questionmark" href="#" @click.prevent="togglePeakDemand()" @click="scrollMeTo('top')">
+                    <span class="fa fa-question-circle"></span>
+                </a>
+            </h2>
+            <p class="peak-demand__range-container">
+                <span class="peak-demand__range-icon peak-demand__range-icon--left fa fa-bolt"></span>
+                <input type="range" class="peak-demand__range" v-bind:min="demandMin" v-bind:max="demandMax" v-model.number="peakDemandRange" ref="peakDemandRange">
+                <span class="peak-demand__range-bubble" :style="peakDemandRangeBubble" :class="{'energy-use__range-bubble__active': demandBubble}">{{peakDemand | round}}</span>
+                <span class="peak-demand__range-icon peak-demand__range-icon--right fa fa-bolt"></span>
+            </p>
+            <div class="container">
+                <a href="#" @click.prevent="resetDemand()" class="reset" :class="{'reset__active': demandReset}">Reset</a>
+            </div>
+        </div>
+    </div>
+
+    <table class="season-selector">
+        <tr>
+            <th>&nbsp;</th>
+            <th>Standard <br /> Residential Rate</th>
+            <th>Peak <br /> Efficiency Rate</th>
+            <th>Difference</th>
+        </tr>
+        <tr>
+            <td class="season-selector__icon"><span class="fa fa-sun"></span>Summer</td>
+            <td class="season-selector__rate">${{resRateS | round}}<br><em>Monthly Average</em></td>
+            <td class="season-selector__rate">${{effRateS | round}}<br><em>Monthly Average</em></td>
+            <td class="season-selector__diff">{{diffS}}</td>
+        </tr>
+        <tr>
+            <td class="season-selector__icon"><span class="fa fa-snowflake"></span>Winter</td>
+            <td class="season-selector__rate">${{resRateW | round}}<br><em>Monthly Average</em></td>
+            <td class="season-selector__rate">${{effRateW | round}}<br><em>Monthly Average</em></td>
+            <td class="season-selector__diff">{{diffW}}</td>
+        </tr>
+        <tr>
+            <td class="season-selector__icon"><span class="fa fa-calendar-check"></span>Year-round</td>
+            <td class="season-selector__rate">${{resRateY | round | comma}}</td>
+            <td class="season-selector__rate">${{effRateY | round | comma}}</td>
+            <td class="season-selector__diff">{{diffY}}</td>
+        </tr>
+    </table>
+
+    <div class="peak-demand-overlay" v-show="peakDemandOpen">
+        <a href="#top" class="peak-demand-overlay__close" @click.prevent="togglePeakDemand()"><span class="fa fa-times"></span></a>
+        <h2 class="peak-demand-overlay__title">What is "peak demand"?</h2>
+        <p class="peak-demand-overlay__desc">Demand is the rate at which you consume electricity – or that amount needed to power your home or business at any given point in time. Peak Demand is the amount of energy your home or business needed during the highest 15-minute interval of this billing period. Using all of your devices at one time will max out your peak demand, so by planning tasks and using less devices at one time, your demand can be significantly lower.</p>
+        <h3 class="peak-demand-overlay__sub">Avoid running high-energy appliances together to keep your peak demand low. Click the icons to see how shutting down some of your appliances can lower your energy costs!</h3>
+        <div class="peak-demand-overlay__appliance-selector">
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--ac" :class="{'peak-demand-overlay__appliance--selected': appliances.ac, 'peak-demand-overlay__appliance--ac_on': appliances.ac}" @click.prvent="toggleAppliance('ac')"><div class= "child">Air conditioning</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--ewh" :class="{'peak-demand-overlay__appliance--selected': appliances.ewh, 'peak-demand-overlay__appliance--ewh_on': appliances.ewh}" @click.prvent="toggleAppliance('ewh')"><div class= "child">Electric water heater</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--dryer" :class="{'peak-demand-overlay__appliance--selected': appliances.dryer, 'peak-demand-overlay__appliance--dryer_on': appliances.dryer}" @click.prvent="toggleAppliance('dryer')"><div class= "child">Dryer</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--eo" :class="{'peak-demand-overlay__appliance--selected': appliances.eo, 'peak-demand-overlay__appliance--eo_on': appliances.eo}" @click.prvent="toggleAppliance('eo')"><div class= "child">Electric oven</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--hd" :class="{'peak-demand-overlay__appliance--selected': appliances.hd, 'peak-demand-overlay__appliance--hd_on': appliances.hd}" @click.prvent="toggleAppliance('hd')"><div class= "child">Hair dryer</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--micro" :class="{'peak-demand-overlay__appliance--selected': appliances.micro, 'peak-demand-overlay__appliance--micro_on': appliances.micro}" @click.prvent="toggleAppliance('micro')"><div class= "child">Microwave</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--light" :class="{'peak-demand-overlay__appliance--selected': appliances.light, 'peak-demand-overlay__appliance--light_on': appliances.light}" @click.prvent="toggleAppliance('light')"><div class= "child">Incandescent lighting</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--iron" :class="{'peak-demand-overlay__appliance--selected': appliances.iron, 'peak-demand-overlay__appliance--iron_on': appliances.iron}" @click.prvent="toggleAppliance('iron')"><div class= "child">Clothes iron</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--fridge" :class="{'peak-demand-overlay__appliance--selected': appliances.fridge, 'peak-demand-overlay__appliance--fridge_on': appliances.fridge}" @click.prvent="toggleAppliance('fridge')"><div class= "child">Refrigerator</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--space" :class="{'peak-demand-overlay__appliance--selected': appliances.space, 'peak-demand-overlay__appliance--space_on': appliances.space}" @click.prvent="toggleAppliance('space')"><div class= "child">Space Heater</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--wash" :class="{'peak-demand-overlay__appliance--selected': appliances.wash, 'peak-demand-overlay__appliance--wash_on': appliances.wash}" @click.prvent="toggleAppliance('wash')"><div class= "child">Washing Machine</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--tv" :class="{'peak-demand-overlay__appliance--selected': appliances.tv, 'peak-demand-overlay__appliance--tv_on': appliances.tv}" @click.prvent="toggleAppliance('tv')"><div class= "child">Television</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--freezer" :class="{'peak-demand-overlay__appliance--selected': appliances.freezer, 'peak-demand-overlay__appliance--freezer_on': appliances.freezer}" @click.prvent="toggleAppliance('freezer')"><div class= "child">Freezer</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--dish" :class="{'peak-demand-overlay__appliance--selected': appliances.dish, 'peak-demand-overlay__appliance--dish_on': appliances.dish}" @click.prvent="toggleAppliance('dish')"><div class= "child">Dishwasher</div></div>
+            <div class="peak-demand-overlay__appliance peak-demand-overlay__appliance--console" :class="{'peak-demand-overlay__appliance--selected': appliances.console, 'peak-demand-overlay__appliance--console_on': appliances.console}" @click.prvent="toggleAppliance('console')"><div class= "child">Gaming Console/DVR</div></div>
+        </div>
+        <div class="peak-demand-overlay__estimate">
+            <h2 class="estimated-peak-demand">
+                Estimated peak demand: {{estimatedPeakDemand | round}}
+            </h2>
+        </div>
+        <div class="peak-demand-overlay__assumptions">
+            For approximation only. Assumptions apply. <a href="http://www.example.com/" target="_blank">See Details</a>
+        </div>
+        <p>Using all of the appliances at once makes this higher than your current peak demand.</p>
+        <a href="#" @click.prevent="applyDemand()" @click="scrollMeTo('peak-demand')" class="button apply">See how this peak demand level could affect your bill</a>
+    </div>
+</div>
